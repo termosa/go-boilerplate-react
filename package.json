@@ -1,0 +1,13 @@
+{
+  "name": "go-boilerplate-react",
+  "description": "Go boilerplate for create-react-app",
+  "version": "0.0.1",
+  "private": true,
+  "dependencies": {
+    "clui": "^0.3.6",
+    "create-react-app": "^1.5.2",
+    "go": "^3.0.0",
+    "npm-run": "^5.0.1",
+    "temp-dir": "^1.0.0"
+  }
+}
