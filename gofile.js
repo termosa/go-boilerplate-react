@@ -1,3 +1,5 @@
 const go = require('go')
 
-go.registerCommand(require('./scripts/install'))
+go.fs.readdirSync('scripts')
+  .map(filename => require(`./scripts/${filename}`))
+  .forEach(script => go.registerCommand(script))
