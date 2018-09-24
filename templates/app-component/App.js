@@ -1,6 +1,8 @@
-import './App.css';
+<% if (framework) { %>import '<%= framework %>';
+<% } %>import './App.css';
 import React, { Component } from 'react';
-import {
+<% if (router) {
+%>import {
   BrowserRouter as Router,
   Route,
   Switch
@@ -8,18 +10,24 @@ import {
 
 const EmptyPage = () => (
   <p>
-    To get started, edit <code>src/App.jsx</code> and save to reload.
+    <%= message %>
   </p>
-);
+);<% } %>
 
 const App = () => (
-  <Router>
+  <% if (router) {
+  %><Router>
     <div className="App">
       <Switch>
         <Route path="*" exact={true} component={EmptyPage} />
       </Switch>
     </div>
-  </Router>
+  </Router><% } else {
+  %><div className="App">
+    <p>
+      <%= message %>
+    </p>
+  </div><% } %>
 );
 
 export default App;

@@ -6,6 +6,11 @@ const tmpPath = require('temp-dir')
 
 const options = {}
 
+const CSS_FRAMEWORKS = [
+  { package: 'bulma', cssPath: 'bulma/css/bulma.min.css' },
+  { package: 'bootstrap', cssPath: 'bootstrap/dist/css/bootstrap.min.css' }
+]
+
 const step = msg => console.log(` ${(step.c = (step.c || 0) + 1).toString().padStart(2)}. ${msg}`)
 
 const execute = (command, options = {}) => new Promise((resolve, reject) => {
@@ -19,6 +24,9 @@ const execute = (command, options = {}) => new Promise((resolve, reject) => {
       else resolve()
     })
 })
+
+const getFrameworkCssPath = framework =>
+  CSS_FRAMEWORKS.find(({ package }) => framework === package).cssPath
 
 const configure = (skip) => skip ? '' :
   go.ask([
@@ -36,7 +44,8 @@ const configure = (skip) => skip ? '' :
     { name: 'framework',
       when: ({ css }) => css,
       message: 'Choose CSS Framework:',
-      choices: [ 'bootstrap', 'foundation' ] }
+      choices: CSS_FRAMEWORKS.map(({ package }) => package),
+      default: 'bootstrap' }
   ])
   .then(answers => Object.assign(options, answers))
   .then(() => options.name)
@@ -69,27 +78,28 @@ const createReactApp = path => {
 
 const installDependencies = path => {
   const deps = []
-  if (options.router) deps.push('react-router')
+  if (options.router) deps.push('react-router-dom')
   if (options.framework) deps.push(options.framework)
-  return execute('npm install react-router-dom', { cwd: path })
+  return execute(`npm install ${deps.join(' ')}`, { cwd: path })
     .then(() => step(`Install dependencies (${deps.join(', ')})`))
     .then(() => path)
 }
 
-const setupRouter = async path => {
-  if (!options.router) return path
-  step('Setup React Router')
+const setupAppTemplate = async path => {
+  step('Generate application files')
+
   // Cleanup src directory
   const initialAppFiles = ['App.js', 'App.test.js', 'App.css', 'logo.svg']
   await Promise.all(initialAppFiles.map(e => go.remove(join(path, 'src', e))))
-  // Setup new application root component
-  const appTemplatePath = join('templates', 'app-with-router')
-  await go.processTemplates({}, { cwd: appTemplatePath }, join(path, 'src') + sep)
-  return path
-}
 
-const setupCssFramework = path => {
-  if (!options.framework) return path
+  // Setup new application root component
+  const context = {
+    framework: options.framework && getFrameworkCssPath(options.framework),
+    message: 'To get started, edit <code>src/App.jsx</code> and save to reload.',
+    router: options.router
+  }
+  const appTemplatePath = join('templates', 'app-component')
+  await go.processTemplates(context, { cwd: appTemplatePath }, join(path, 'src') + sep)
   return path
 }
 
@@ -115,8 +125,7 @@ module.exports = {
       //.then(mockTmpDir)
       .then(createReactApp)
       .then(installDependencies)
-      .then(setupRouter)
-      .then(setupCssFramework)
+      .then(setupAppTemplate)
       .then(clearDestinationFolder)
       .then(moveToDestination)
       .then(removeTmpDir)/**/
